@@ -1,0 +1,102 @@
+defmodule GrogVM.Decode.Operands do
+  @moduledoc """
+  The parameters of each SCUMM v5 instruction, read from the bytes after its opcode.
+
+  Most instructions follow a fixed layout (`GrogVM.Decode.Layout`); the ones with
+  sub-operations are read by `GrogVM.Decode.SubOps`.
+  """
+
+  alias GrogVM.Decode.{Cursor, Layout, SubOps}
+
+  @layouts %{
+    stop_object_code: [],
+    break_here: [],
+    end_cutscene: [],
+    stop_music: [],
+    dummy: [],
+    put_actor: [:b1, :w2, :w3],
+    start_music: [:b1],
+    get_actor_room: [:result, :b1],
+    get_actor_elevation: [:result, :b1],
+    set_state: [:w1, :b2],
+    face_actor: [:b1, :w2],
+    get_verb_entrypoint: [:result, :w1, :w2],
+    walk_actor_to_actor: [:b1, :b2, :byte],
+    put_actor_at_object: [:b1, :w2],
+    get_object_state: [:result, :w1],
+    get_object_owner: [:result, :w1],
+    animate_actor: [:b1, :b2],
+    pan_camera_to: [:w1],
+    actor_from_pos: [:result, :w1, :w2],
+    get_random_nr: [:result, :b1],
+    and: [:result, :w1],
+    or: [:result, :w1],
+    move: [:result, :w1],
+    add: [:result, :w1],
+    subtract: [:result, :w1],
+    multiply: [:result, :w1],
+    divide: [:result, :w1],
+    jump_relative: [:jump],
+    start_sound: [:b1],
+    stop_sound: [:b1],
+    walk_actor_to: [:b1, :w2, :w3],
+    is_actor_in_box: [:b1, :b2, :jump],
+    get_anim_counter: [:result, :b1],
+    get_actor_x: [:result, :w1],
+    get_actor_y: [:result, :w1],
+    load_room_with_ego: [:w1, :b2, :signed_word, :signed_word],
+    pickup_object: [:w1, :b2],
+    equal_zero: [:var, :jump],
+    not_equal_zero: [:var, :jump],
+    is_equal: [:var, :w1, :jump],
+    is_not_equal: [:var, :w1, :jump],
+    is_greater: [:var, :w1, :jump],
+    is_greater_equal: [:var, :w1, :jump],
+    is_less: [:var, :w1, :jump],
+    is_less_equal: [:var, :w1, :jump],
+    set_owner_of: [:w1, :b2],
+    delay_variable: [:var],
+    put_actor_in_room: [:b1, :b2],
+    if_state: [:w1, :b2, :jump],
+    if_not_state: [:w1, :b2, :jump],
+    get_inventory_count: [:result, :b1],
+    set_camera_at: [:w1],
+    get_dist: [:result, :w1, :w2],
+    find_object: [:result, :b1, :b2],
+    walk_actor_to_object: [:b1, :w2],
+    start_object: [:w1, :b2, :list],
+    get_actor_scale: [:result, :b1],
+    find_inventory: [:result, :b1, :b2],
+    draw_box: [:w1, :w2, :sub_op, :w1, :w2, :b3],
+    cutscene: [:list],
+    chain_script: [:b1, :list],
+    increment: [:result],
+    decrement: [:result],
+    sound_kludge: [:list],
+    pickup_object_old: [:w1],
+    actor_follow_camera: [:b1],
+    set_object_name: [:w1, :text],
+    get_actor_moving: [:result, :b1],
+    set_class: [:w1, :list],
+    freeze_scripts: [:b1],
+    stop_script: [:b1],
+    get_actor_facing: [:result, :b1],
+    get_closest_obj_actor: [:result, :w1],
+    get_string_width: [:result, :b1],
+    is_script_running: [:result, :b1],
+    debug: [:w1],
+    get_actor_width: [:result, :b1],
+    stop_object_script: [:w1],
+    lights: [:b1, :byte, :byte],
+    get_actor_costume: [:result, :b1],
+    load_room: [:b1],
+    get_actor_walk_box: [:result, :b1],
+    is_sound_running: [:result, :b1],
+    system_ops: [:byte]
+  }
+
+  @doc "Reads the parameters of instruction `name` at `cursor`."
+  @spec read(atom(), Cursor.t()) :: {Layout.read(), Cursor.t()}
+  def read(name, cursor) when is_map_key(@layouts, name), do: Layout.read(@layouts[name], cursor)
+  def read(name, cursor), do: SubOps.read(name, cursor)
+end
